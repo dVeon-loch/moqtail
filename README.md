@@ -59,7 +59,6 @@ Certs are stored in R2 under `${R2_PREFIX}/fullchain.pem` (default prefix: `$HOS
 
 ### Requirements
 
-- Docker host must support FUSE (`/dev/fuse` device, `SYS_ADMIN` capability)
 - R2 bucket and API credentials (see Cloudflare dashboard)
 - BunnyCDN API key with DNS zone access
 
