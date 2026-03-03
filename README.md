@@ -44,9 +44,53 @@ The relay is a Rust application that forwards MoQ messages between publishers an
 cargo run --bin relay -- --port 4433 --cert-file cert/cert.pem --key-file cert/key.pem
 ```
 
-### ⚙️ Configuration
+## Docker Deployment
 
-- **WebTransport**: Ensure your browser supports WebTransport and that you have trusted the local CA, see the [README.md](apps/relay/cert/README.md) of the relay for instructions.
+The Docker image manages TLS certificates via Cloudflare R2 and BunnyCDN DNS, removing the need to manage certs manually.
+
+### How the entrypoint works
+
+1. **DNS update** — fetches the BunnyCDN Anycast IP and updates the A record for your subdomain
+2. **R2 mount** — mounts the R2 bucket via rclone FUSE at `/mnt/r2`
+3. **Cert seed** — if R2 is empty and a local volume cert exists, seeds R2 from it (one-time bootstrap)
+4. **Cert renewal** — runs certbot (dns-bunny plugin) if the cert is missing or expiring within 30 days; writes renewed certs back to R2
+5. **Relay start** — launches `relay` with the cert paths
+
+Certs are stored in R2 under `${R2_PREFIX}/fullchain.pem` (default prefix: `$HOSTNAME`, overridden via `R2_PREFIX`).
+
+### Requirements
+
+- Docker host must support FUSE (`/dev/fuse` device, `SYS_ADMIN` capability)
+- R2 bucket and API credentials (see Cloudflare dashboard)
+- BunnyCDN API key with DNS zone access
+
+### Running
+
+```bash
+docker compose up --build
+```
+
+### Environment Variables
+
+| Variable | Required | Description |
+|---|---|---|
+| `R2_ACCOUNT_ID` | Yes | Cloudflare account ID |
+| `R2_ACCESS_KEY_ID` | Yes | R2 API token access key |
+| `R2_SECRET_ACCESS_KEY` | Yes | R2 API token secret |
+| `R2_BUCKET_NAME` | Yes | R2 bucket name |
+| `R2_PREFIX` | No | Subdir in bucket (default: `$HOSTNAME`) |
+| `R2_CERT_FILE` | No | Cert filename (default: `fullchain.pem`) |
+| `R2_KEY_FILE` | No | Key filename (default: `privkey.pem`) |
+| `BUNNY_APIKEY` | No | BunnyCDN API key (DNS update + certbot) |
+| `BUNNY_APP_ID` | No | Magic Containers app ID |
+| `BUNNY_ZONEID` | No | DNS zone ID |
+| `BUNNY_RECORDID` | No | DNS record ID |
+| `DNS_SUBDOMAIN` | No | Subdomain for A record |
+| `CERTBOT_DOMAIN` | No | Domain for cert issuance |
+| `CERTBOT_EMAIL` | No | Let's Encrypt contact email |
+| `CERTBOT_STAGING` | No | Use LE staging if set |
+| `RELAY_PORT` | No | UDP port (default: `4433`) |
+| `RELAY_HOST` | No | Bind host (default: `::`) |
 
 ## 🤝 Contributing
 
