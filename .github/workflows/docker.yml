@@ -1,0 +1,43 @@
+name: Docker
+
+on:
+  push:
+    tags:
+      - 'moqtail-v*'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Release
+    runs-on: buildjet-8vcpu-ubuntu-2204
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compute image name
+        run: echo "IMAGE=ghcr.io/$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')/moqtail" >> $GITHUB_ENV
+
+      - name: Extract version from tag
+        run: echo "VERSION=${GITHUB_REF#refs/tags/moqtail-v}" >> $GITHUB_ENV
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:${{ env.VERSION }}
+            ${{ env.IMAGE }}:latest
+          platforms: linux/amd64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
