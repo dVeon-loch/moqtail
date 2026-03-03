@@ -51,10 +51,9 @@ The Docker image manages TLS certificates via Cloudflare R2 and BunnyCDN DNS, re
 ### How the entrypoint works
 
 1. **DNS update** — fetches the BunnyCDN Anycast IP and updates the A record for your subdomain
-2. **R2 mount** — mounts the R2 bucket via rclone FUSE at `/mnt/r2`
-3. **Cert seed** — if R2 is empty and a local volume cert exists, seeds R2 from it (one-time bootstrap)
-4. **Cert renewal** — runs certbot (dns-bunny plugin) if the cert is missing or expiring within 30 days; writes renewed certs back to R2
-5. **Relay start** — launches `relay` with the cert paths
+2. **R2 download** — downloads TLS certificates directly from Cloudflare R2 via rclone (no FUSE required)
+3. **Cert renewal** — runs certbot (dns-bunny plugin) if the cert is missing or expiring within 30 days; writes renewed certs back to R2
+4. **Relay start** — launches `relay` with the cert paths
 
 Certs are stored in R2 under `${R2_PREFIX}/fullchain.pem` (default prefix: `$HOSTNAME`, overridden via `R2_PREFIX`).
 
