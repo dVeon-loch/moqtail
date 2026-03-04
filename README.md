@@ -55,7 +55,7 @@ The Docker image manages TLS certificates via Cloudflare R2 and BunnyCDN DNS, re
 3. **Cert renewal** — runs certbot (dns-bunny plugin) if the cert is missing or expiring within 30 days; writes renewed certs back to R2
 4. **Relay start** — launches `relay` with the cert paths
 
-Certs are stored in R2 under `${R2_PREFIX}/fullchain.pem` (default prefix: `$HOSTNAME`, overridden via `R2_PREFIX`).
+Certs are stored in R2 under `${R2_PREFIX}/fullchain.pem`.
 
 ### Requirements
 
@@ -70,25 +70,33 @@ docker compose up --build
 
 ### Environment Variables
 
-| Variable | Required | Description |
+**Required**
+
+| Variable | Description |
+|---|---|
+| `S3_ENDPOINT` | S3-compatible endpoint URL (e.g. `https://<id>.r2.cloudflarestorage.com`) |
+| `S3_ACCESS_KEY_ID` | S3 API token access key |
+| `S3_SECRET_ACCESS_KEY` | S3 API token secret |
+| `S3_BUCKET_NAME` | S3 bucket name |
+| `S3_PREFIX` | Subdirectory prefix within the bucket |
+| `BUNNY_APIKEY` | BunnyCDN API key |
+| `BUNNY_APP_ID` | Magic Containers app ID |
+| `BUNNY_ZONEID` | DNS zone ID |
+| `BUNNY_RECORDID` | DNS record ID to update |
+| `DNS_SUBDOMAIN` | Subdomain name for the A record |
+| `CERTBOT_DOMAIN` | Domain for cert issuance |
+| `CERTBOT_EMAIL` | Let's Encrypt contact email |
+
+**Optional**
+
+| Variable | Default | Description |
 |---|---|---|
-| `R2_ACCOUNT_ID` | Yes | Cloudflare account ID |
-| `R2_ACCESS_KEY_ID` | Yes | R2 API token access key |
-| `R2_SECRET_ACCESS_KEY` | Yes | R2 API token secret |
-| `R2_BUCKET_NAME` | Yes | R2 bucket name |
-| `R2_PREFIX` | No | Subdir in bucket (default: `$HOSTNAME`) |
-| `R2_CERT_FILE` | No | Cert filename (default: `fullchain.pem`) |
-| `R2_KEY_FILE` | No | Key filename (default: `privkey.pem`) |
-| `BUNNY_APIKEY` | No | BunnyCDN API key (DNS update + certbot) |
-| `BUNNY_APP_ID` | No | Magic Containers app ID |
-| `BUNNY_ZONEID` | No | DNS zone ID |
-| `BUNNY_RECORDID` | No | DNS record ID |
-| `DNS_SUBDOMAIN` | No | Subdomain for A record |
-| `CERTBOT_DOMAIN` | No | Domain for cert issuance |
-| `CERTBOT_EMAIL` | No | Let's Encrypt contact email |
-| `CERTBOT_STAGING` | No | Use LE staging if set |
-| `RELAY_PORT` | No | UDP port (default: `4433`) |
-| `RELAY_HOST` | No | Bind host (default: `::`) |
+| `S3_PROVIDER` | `Other` | rclone S3 provider (e.g. `Cloudflare`, `AWS`, `Minio`) |
+| `S3_CERT_FILE` | `fullchain.pem` | Cert filename in the bucket |
+| `S3_KEY_FILE` | `privkey.pem` | Key filename in the bucket |
+| `CERTBOT_STAGING` | — | Use LE staging if set |
+| `RELAY_PORT` | `443` | UDP port |
+| `RELAY_HOST` | `::` | Bind host |
 
 ## 🤝 Contributing
 
